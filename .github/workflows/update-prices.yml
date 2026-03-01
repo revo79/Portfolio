@@ -5,10 +5,6 @@ on:
     - cron: '0 18 * * 1-5'
   workflow_dispatch:
 
-concurrency:
-  group: update-prices
-  cancel-in-progress: false
-
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -16,28 +12,17 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
 
       - name: Fetch prices & update index.html
         env:
           FMP_KEY: ${{ secrets.FMP_KEY }}
-        run: |
-          python3 update_prices.py
+        run: python3 update_prices.py
 
       - name: Commit updated prices
         run: |
           git config user.name "Portfolio Bot"
           git config user.email "bot@portfolio"
-          git fetch origin main
-          git reset --hard origin/main
-          git checkout -- .
-          python3 update_prices.py
           git add index.html
-          git diff --staged --quiet && echo "No changes" && exit 0
-          git commit -m "Auto-Update Kurse $(date '+%d.%m.%Y %H:%M')"
-          git push --force origin main
+          git diff --staged --quiet || git commit -m "Auto-Update Kurse $(date '+%d.%m.%Y %H:%M')"
+          git push
