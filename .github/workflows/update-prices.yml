@@ -21,6 +21,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch prices & update index.html
         env:
@@ -33,8 +34,6 @@ jobs:
           git config user.name "Portfolio Bot"
           git config user.email "bot@portfolio"
           git add index.html
-          git stash
-          git pull --rebase origin main
-          git stash pop
-          git diff --staged --quiet || git commit -m "Auto-Update Kurse $(date '+%d.%m.%Y %H:%M')"
-          git push origin main
+          git diff --staged --quiet && echo "No changes" && exit 0
+          git commit -m "Auto-Update Kurse $(date '+%d.%m.%Y %H:%M')"
+          git push --force-with-lease origin main
